@@ -1,6 +1,7 @@
 defmodule Life do
   
   def kick_start states do
+    Life.Printer.start_link
     { cells, lineCount } =  generate_cells states
     current = Life.Util.flatten_states current_states cells
     
@@ -12,9 +13,7 @@ defmodule Life do
   end
   
   defp tick_until_stale_loop { cells, lineCount, gen}, last, :false do
-    IO.puts "\e[35m Generation " <> Integer.to_string(gen) <> "\e[39m"
-    
-    Life.Util.print_cells cells, lineCount
+    Life.Printer.print cells, lineCount, gen
     
     cells = tick cells
     
@@ -28,7 +27,7 @@ defmodule Life do
     end
     
     if dupIndex != :nil do
-      IO.puts "\e[41mLoop to Generation " <> Integer.to_string(gen - dupIndex) <> "\e[m"
+      Life.Printer.print_end gen, dupIndex
     end
     
     tick_until_stale_loop { cells, lineCount, gen + 1 }, [current|last], stop
@@ -60,7 +59,7 @@ defmodule Life do
     list = for i <- 0..(x - 1), j <- 0..(y - 1), do: { i, j }
     list = list
       |> Enum.map(fn coords -> { coords, :random.uniform < 0.5 } end)
-      |> Enum.map(fn { coords, state } -> { coords, { elem(Life.Cell.start_link(coords, state), 1), state } } end)
+      |> Life.Util.pmap(fn { coords, state } -> { coords, { elem(Life.Cell.start_link(coords, state), 1), state } } end)
       |> Enum.into(%{})
       
     { list, y }
@@ -70,7 +69,7 @@ defmodule Life do
     range = 0..count 
       |> Life.Util.cartesian
       |> Enum.map(fn coords -> { coords, :random.uniform < 0.5 } end)
-      |> Enum.map(fn { coords, state } -> { coords, { elem(Life.Cell.start_link(coords, state), 1), state } } end)
+      |> Life.Util.pmap(fn { coords, state } -> { coords, { elem(Life.Cell.start_link(coords, state), 1), state } } end)
       |> Enum.into(%{})
     
     { range, count + 1 }

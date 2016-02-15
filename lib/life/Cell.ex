@@ -22,7 +22,7 @@ defmodule Life.Cell do
   def handle_call({ :tick, currentStates }, _, { coords, alive, neighbours }) do
     sum = Life.Util.pmap(neighbours, fn c -> currentStates[c] end)
       |> Enum.filter(fn a -> a != :nil end)
-      |> Enum.filter(fn { p, s } -> s == :true end)
+      |> Enum.filter(fn { _, s } -> s == :true end)
       |> Enum.count
       
     newAlive =

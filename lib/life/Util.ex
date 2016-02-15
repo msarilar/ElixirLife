@@ -26,9 +26,9 @@ defmodule Life.Util do
   end
 
   def neighbours_coordinates { x, y } do
-    Enum.map(0..2, fn x -> x - 1 end)
+    pmap(0..2, fn x -> x - 1 end)
       |> Life.Util.cartesian
-      |> Enum.map(&(Life.Util.apply_mod &1, x, y))
+      |> pmap(&(Life.Util.apply_mod &1, x, y))
       |> Enum.filter(fn { x, y } -> x >= 0 && y >= 0 end)
       |> Enum.filter(fn { nx, ny } -> { nx, ny } != { x, y } end)
   end
@@ -43,25 +43,6 @@ defmodule Life.Util do
   def flatten_states states do
     Life.Util.hash Enum.sort(states)
       |> Enum.map(fn { _, { _, s } } -> s end)
-  end
-  
-  def print_cells cells, lineCount do
-    pretty = Enum.sort(cells)
-      |> Enum.map(fn { _, { _, s } } -> s end)
-      |> Enum.map(fn s  ->
-          case s do
-              :true -> "\e[32mO"
-              :false -> "\e[31mX"
-          end
-        end)
-
-    text = Life.Util.split(pretty, lineCount)
-      |> Enum.map(fn line -> Enum.reduce(line, "", fn(item, text) -> text <> item end) end)
-      |> Enum.reduce("", fn(item, text) -> text <> item <> "\n" end)
-      
-    IO.puts text <> "\e[39m"
-    
-    :ok
   end
   
 end
