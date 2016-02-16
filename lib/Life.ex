@@ -5,17 +5,17 @@ defmodule Life do
     { cells, lineCount } =  generate_cells states
     current = Life.Util.flatten_states current_states cells
     
-    tick_until_stale_loop { cells, lineCount, 0}, [current], :false
+    tick_until_stale_loop { cells, lineCount, 0, cells_alive cells }, [current], :false
   end
   
   defp tick_until_stale_loop _, _, :true do
     :ok
   end
   
-  defp tick_until_stale_loop { cells, lineCount, gen}, last, :false do
+  defp tick_until_stale_loop { cells, lineCount, gen, toQuery}, last, :false do
     Life.Printer.print cells, lineCount, gen
     
-    cells = tick cells
+    { cells, toQuery } = tick cells, toQuery
     
     current = Life.Util.flatten_states cells
     
@@ -30,7 +30,7 @@ defmodule Life do
       Life.Printer.print_end gen, dupIndex
     end
     
-    tick_until_stale_loop { cells, lineCount, gen + 1 }, [current|last], stop
+    tick_until_stale_loop { cells, lineCount, gen + 1, toQuery }, [current|last], stop
   end
 
   defp current_states cells do
@@ -38,12 +38,33 @@ defmodule Life do
       |> Enum.into(%{})
   end
 
-  defp tick cells do
+  defp tick cells, toQuery do
     currentStates = current_states cells
     
-    Life.Util.pmap(cells, fn { a, { pid, _ } } -> { a, { pid, Life.Cell.tick(pid, currentStates) } } end)
-      |> Life.Util.pmap(fn { a, { pid, s } } -> { a, { pid, Life.Cell.apply(pid, s) } } end)
+    newCells = Life.Util.pmap(cells, fn { a, { pid, s } } -> 
+      { a, { pid, 
+        case MapSet.member?(toQuery, a) do
+          :true  -> Life.Cell.tick(pid, currentStates)
+          :false -> s
+        end } } end)
+      |> Life.Util.pmap(fn { a, { pid, s } } -> 
+      { a, { pid, 
+        case MapSet.member?(toQuery, a) do
+          :true  -> Life.Cell.apply(pid, s)
+          :false -> s
+        end } } end)
       |> Enum.into(%{})
+      
+    toQuery = cells_alive cells
+      
+      { newCells, toQuery }
+  end
+  
+  defp cells_alive cells do
+    Enum.filter(cells, fn { _, { _, s } } -> s == :true end)
+      |> Life.Util.pmap(fn { a, { _, _ } } -> Life.Util.neighbours_coordinates a end)
+      |> Enum.concat
+      |> MapSet.new
   end
 
   defp generate_cells states do
