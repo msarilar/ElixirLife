@@ -10,7 +10,7 @@ use Mix.Config
 
 # You can configure for your application as:
 #
-#     config :life, key: :value
+     config :elixir, ansi_enabled: :true
 #
 # And access this configuration in your application as:
 #

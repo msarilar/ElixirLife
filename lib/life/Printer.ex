@@ -20,6 +20,8 @@ defmodule Life.Printer do
   end
   
   def handle_cast( {:print, { cells, lineCount, gen } }, :nil) do
+    # IO.write [IO.ANSI.home, IO.ANSI.clear]
+  
     IO.puts "\e[35m Generation " <> Integer.to_string(gen) <> "\e[39m"
       
     pretty = Enum.sort(cells)
